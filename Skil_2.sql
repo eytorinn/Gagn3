@@ -85,7 +85,8 @@ begin
     insert into Students(firstName,lastName,dob,startSemester)values(first_name, last_name, date_of_birth, semester_id);
     set new_student_id = last_insert_id();
     call AddMandatoryCourses(new_student_id, track_id, semester_id);
-    
+end &&
+delimiter ;
     
 delimiter €€
 create procedure AddMandatoryCourses(student_id int, track_id int, first_semester_id int)
@@ -95,9 +96,19 @@ begin
 	from TrackCourses
 	where trackID = track_id and mandatory = true;
 	select row_count() as Courses_Added;
-	end €€
-	delimiter ;
+end €€
+delimiter;
+								     
+call AddMandatoryCourses(1,7,'2020-11-30',6); select * from registration;								    
+								    
+								     
+drop procedure if exists StudentRegistration $$
+    
+create procedure StudentRegistration(in varStudentID int, in varTrackID int, in varCourseNumber char(10), in varDate date, in varPassed bool, in varSemester int)
+begin
+	insert into Registration(studentID,trackID,courseNumber,registrationDate,passed,semesterID)
+	values(varStudentID,varTrackID,varCourseNumber,varDate,varPassed,varSemester);
+end $$
+delimiter ;								     
     
     
-    end &&
-    delimiter ;
