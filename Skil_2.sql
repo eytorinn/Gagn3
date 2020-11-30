@@ -84,7 +84,6 @@ begin
     
     insert into Students(firstName,lastName,dob,startSemester)values(first_name, last_name, date_of_birth, semester_id);
     set new_student_id = last_insert_id();
-    call AddMandatoryCourses(new_student_id, track_id, semester_id);
 end &&
 delimiter ;
     
@@ -111,4 +110,4 @@ begin
 end $$
 delimiter ;								     
     
-    
+call StudentRegistration(1,7,'FORR302','2020-11-30',false,6);
