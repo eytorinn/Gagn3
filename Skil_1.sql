@@ -20,9 +20,9 @@ delimiter ;
 delimiter $$
 drop procedure if exists SingleCourse $$
 
-create procedure SingleCourse()
+create procedure SingleCourse(Course_Nu char(10))
 begin
-	select * from courses where courseNumber = "STÆ303";
+	select * from courses where courseNumber = courseNu;
 end $$
 delimiter ;
 
@@ -33,9 +33,10 @@ delimiter ;
 delimiter $$
 drop procedure if exists NewCourse $$
 
-create procedure NewCourse()
+create procedure NewCourse(Course_Nu char(10), course_Na varchar(75), course_Cr tinyint(4))
 begin
-	insert into courses(courseNumber, áfangaheitið, courseCredits) values("RIG304", "Rigningafræði", 5);
+	insert into courses(CourseNumber, CourseName , CourseCredits) 
+	values(courseNu, courseNa, courseCr);
 end $$
 delimiter ;
 
@@ -47,13 +48,15 @@ delimiter ;
 delimiter $$
 drop procedure if exists UpdateCourse $$
 
-create procedure UpdateCourse()
+create procedure UpdateCourse(courseNu char(10), courseNa varchar(75), courseCr tinryint(4))
 begin
 	UPDATE courses
 SET 
-    courseNames = "Rigningafræði"
+    courseNames = courseNa, courseCredit = courseCr
 WHERE
-    CourseNumber = "RIG304";
+    CourseNumber = courseNu
+SELECT
+	select row_count() as 'Updated'										 
 end $$
 delimiter ;
 
@@ -65,11 +68,11 @@ delimiter ;
 delimiter $$
 drop procedure if exists DeleteCourse $$
 
-create procedure DeleteCourse()
+create procedure DeleteCourse(courseNu char(10))
 begin
 	delete from courses
 	where not exists
-		(select courseNumber from trackcourses where trackcourses.courseNumber = courses.courseNumber);
+		(select courseNumber from trackcourses where trackcourses.courseNumber = courseNu);
 end $$
 delimiter ;
 
@@ -93,12 +96,16 @@ delimiter ;
 delimiter $$
 drop function if exists TotalTrackCredits $$
     
-create function TotalTrackCredits()
+create function TotalTrackCredits(brautNu)
 returns int
 begin
-	select courses.courseNumber, courses.courseCredits
+	declare samtala int;
+	set samtala = 0;				    
+	
+  select sum(courseCredits) into samtala				    
     from courses
-    inner join TrackCourses on courses.courseNumber, TrackCourses.courseNumber;
+    inner join TrackCourses on (courses.courseNumber = TrackCourses.courseNumber)
+    where trackcourses.trackID = brautNu;					    
 end $$
 delimiter ;
 
@@ -108,12 +115,12 @@ delimiter ;
 delimiter $$
 drop function if exists TotalNumberOfTrackCourses $$
     
-create function TotalNumberOfTrackCourses()
+create function TotalNumberOfTrackCourses(brautNu int)
 returns int
 begin
 	return (select count(trackID) 
 				from trackcourses
-				where trackID = @trackID);
+				where trackID = brautNu);
 end $$
 delimiter ;
 
@@ -161,17 +168,17 @@ delimiter ;
 
 
 -- 11:
--- Fallið reiknar út og skilar aldri ákveðins nemanda
+-- Fallið reiknar út og skilar aldri ákveðins nemanda // rosaleg ritvilla hér haha
 delimiter $$
 drop function if exists StudentAge $$
     
-create function StudentAge()
+create function StudentAge(studID int)
 returns int
 begin
 	declare age int;
 	set age = 0;
 
-	select timestampdiff(year, Studs.dob, curdate()) into age
+	select year(from_days(datediff(now(),dob))) into age
 	from Students
 	where studentID = studID;
 
@@ -184,7 +191,7 @@ delimiter ;
 delimiter $$
 drop function if exists StudentCredits $$
     
-create function StudentCredits()
+create function StudentCredits(studID)
 returns int
 begin
 	declare units int;
@@ -192,7 +199,7 @@ begin
 
 	select count(passed) into units 
 	from Registration
-	where  studentID = studentID;
+	where  studentID = studID;
 
 	return units;
 end $$
@@ -206,7 +213,9 @@ drop procedure if exists TrackTotalCredits $$
 
 create procedure TrackTotalCredits()
 begin
-	-- kóði hér...
+	select trackName, sum(courses.courseCredits) from tracks
+	inner join trackcourses on (tracks.trackID = trackcourses.trackID) inner join courses on (trackcourses.courseNumber = courses.courseNumber)
+		group by trackName;
 end $$
 delimiter ;
 
@@ -235,6 +244,7 @@ drop procedure if exists RestrictorList $$
 
 create procedure RestrictorList()
 begin
-	-- kóði hér...
+	select restrictionID as 'undanfari, samfari', group_concat(courseNumber) as 'áhrif' from restrictions
+			group by restrictorID;
 end $$
 delimiter ;
