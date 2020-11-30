@@ -25,7 +25,7 @@ delimiter ;
 delimiter $$
 drop trigger if exists update_restrictors$$
 create trigger update_restrictor
-after update on Restrictors
+before update on Restrictors
 for each row
 begin
 	declare msg varchar(300);
