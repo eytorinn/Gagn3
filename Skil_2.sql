@@ -1,3 +1,4 @@
+use progresstracker_v6;
 /* 1:
 	Smíðið trigger fyrir insert into Restrictors skipunina. 
 	Triggernum er ætlað að koma í veg fyrir að einhver áfangi sé undanfari eða samfari síns sjálfs. 
@@ -14,7 +15,7 @@ begin
 	declare msg varchar(300);
     
 	if(new.courseNumber = new.restrictorID) then
-    set msg = 'coursenumber og restrictor geta ekki verið alveg eins!!';
+    set msg = 'coursenumber og restrictor geta ekki verið alveg eins!';
     signal sqlstate '12000' set message_text = msg;
 	end if;
 end$$
@@ -31,7 +32,7 @@ begin
 	declare msg varchar(300);
     
 	if(new.courseNumber = new.restrictorID) then
-    set msg = 'coursenumber og restrictor geta ekki verið alveg eins!!';
+    set msg = 'coursenumber og restrictor geta ekki verið alveg eins!';
     signal sqlstate '12333' set message_text = msg;
 	end if;
 end$$
@@ -83,9 +84,20 @@ begin
     
     insert into Students(firstName,lastName,dob,startSemester)values(first_name, last_name, date_of_birth, semester_id);
     set new_student_id = last_insert_id();
-    
     call AddMandatoryCourses(new_student_id, track_id, semester_id);
+    
+    
+delimiter €€
+create procedure AddMandatoryCourses(student_id int, track_id int, first_semester_id int)
+begin
+	insert into registration(studentID,trackID,courseNumber,registrationDate,passed,semesterID)
+	select student_id, track_id, TrackCourses.courseNumber, date(now()),false, first_semester_id + (TrackCourses.semester - 1)
+	from TrackCourses
+	where trackID = track_id and mandatory = true;
+	select row_count() as Courses_Added;
+	end €€
+	delimiter ;
+    
     
     end &&
     delimiter ;
-
